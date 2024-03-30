@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import { json, urlencoded } from 'body-parser'
 import mongoose from 'mongoose'
 import cors from 'cors'
+import cookieSession from 'cookie-session'
 import { newPostRouter,
          deletePostRouter, 
          updatePostRouter, 
@@ -12,6 +13,7 @@ import { newPostRouter,
          newCommentRouter, 
          deleteCommentRouter 
 } from './routers'
+import { currentUser, requireAuth } from '../common/src';
 
 const app = express()
 
@@ -22,18 +24,26 @@ app.use(cors(
     }
 ))
 
+app.set('trust proxy', true)
+
 app.use(urlencoded({
     extended: false
 }))
 
 app.use(json())
+app.use(cookieSession({
+    signed: false,
+    secure: false
+}))
 
-app.use(newPostRouter)
-app.use(deletePostRouter)
-app.use(updatePostRouter)
+app.use(currentUser)
+
+app.use(requireAuth, newPostRouter)
+app.use(requireAuth, deletePostRouter)
+app.use(requireAuth, updatePostRouter)
 app.use(showPostRouter)
-app.use(newCommentRouter)
-app.use(deleteCommentRouter)
+app.use(requireAuth, newCommentRouter)
+app.use(requireAuth, deleteCommentRouter)
 
 app.all('*', (req, res, next) => {
     const error = new Error('not found!') as CustomError;
@@ -57,6 +67,8 @@ app.use((error: CustomError, req: Request, res: Response, next: NextFunction) =>
 
 const start = async () => {
     if(!process.env.MONGO_URI) throw new Error('MONGO_URI is required!')
+
+    if(!process.env.JWT_KEY) throw new Error('JWT_KEY is required!')
 
     try{
         await mongoose.connect(process.env.MONGO_URI);
