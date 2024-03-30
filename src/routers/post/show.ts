@@ -11,7 +11,7 @@ router.get('/api/post/show/:id', async (req: Request, res: Response, next: NextF
         return res.status(200).send(allPost)
     }
 
-    const post = await Post.findOne({ _id: id })
+    const post = await Post.findOne({ _id: id }).populate('comments')
 
     res.status(200).send(post)
 })
