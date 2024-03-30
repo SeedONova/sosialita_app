@@ -4,6 +4,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from 'express'
 import { json, urlencoded } from 'body-parser'
 import mongoose from 'mongoose'
+import cors from 'cors'
 import { newPostRouter,
          deletePostRouter, 
          updatePostRouter, 
@@ -13,6 +14,13 @@ import { newPostRouter,
 } from './routers'
 
 const app = express()
+
+app.use(cors(
+    {
+        origin: "*",
+        optionsSuccessStatus: 200
+    }
+))
 
 app.use(urlencoded({
     extended: false
